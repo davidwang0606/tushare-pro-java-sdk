@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import com.github.tusharepro.core.entity.IndexDailyEntity;
 import finance.stock.bjtu.Constant;
 import com.github.tusharepro.core.entity.DailyEntity;
 
@@ -50,6 +51,20 @@ public class DaytimeStock {
 		this.handoverMount = entity.getVol().floatValue();
 		this.handoverPrice = entity.getAmount().floatValue();
 		this.avgHandoverPrice = handoverPrice*10/handoverMount;
+	}
+
+	public DaytimeStock(IndexDailyEntity entity){
+		LocalDate ldate = entity.getTradeDate();
+		DateTimeFormatter dtf2 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		this.day = dtf2.format(ldate);
+		//this.day = entity.getTradeDate();
+		this.openPrice = entity.getOpen().floatValue();
+		this.highestPrice = entity.getHigh().floatValue();
+		this.lowestPrice = entity.getLow().floatValue();
+		this.closePrice = entity.getClose().floatValue();
+		this.handoverMount = entity.getVol().floatValue();
+		this.handoverPrice = entity.getAmount().floatValue();
+		this.avgHandoverPrice = handoverPrice*1000/handoverMount;
 	}
 	
 	public DaytimeStock(String day, float openPrice, float highestPrice, float lowestPrice, float closePrice, float handoverMount, float handoverPrice) {

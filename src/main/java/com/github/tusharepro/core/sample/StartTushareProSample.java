@@ -2,6 +2,7 @@ package com.github.tusharepro.core.sample;
 
 import com.github.tusharepro.core.TusharePro;
 import com.github.tusharepro.core.TushareProService;
+import com.github.tusharepro.core.bean.IndexDaily;
 import com.github.tusharepro.core.bean.StockBasic;
 import com.github.tusharepro.core.common.KeyValue;
 import com.github.tusharepro.core.entity.*;
@@ -26,27 +27,67 @@ public class StartTushareProSample {
         start();
     }
 
+    public static void downloadStockDaily(String startdate, String enddate) {
+        StockReader reader = new StockReader("Shanghai");
+        reader.load();
+        reader.add("Shenzheng");
+        reader.add("zhongxiaoban");
+        reader.add("chuangyeban");
+        reader.add("Zhishu");
+        Set<String> codelist = reader.getCode();
+        codelist.forEach(item-> {
+            try {
+                System.out.println(item);
+                appendStock(item,startdate,enddate);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public static void appendStock(String code, String startdate, String enddate) throws IOException {
 
         StockInfo stock = new StockInfo(code,"平安银行");
         StockDayListMsn stockdaylist = new StockDayListMsn(stock);
+        if (code.startsWith("s")){
 
-        if (code.startsWith("6")) {
-            code = code + ".SH";
-        }else {
-            code = code + ".SZ";
+            if (code.equals("sh000001")){ code = "000001.SH";}
+            else if (code.equals("sh000016")){ code = "000016.SH";}
+            else if (code.equals("sz399001")){ code = "399001.SZ";}
+            else if (code.equals("sh000300")){ code = "399300.SZ";}
+
+            List<IndexDailyEntity> listDaily = TushareProService.indexDaily(new Request<IndexDailyEntity>() {}
+                    .allFields()
+                    .param("ts_code", code)
+                    .param("end_date", enddate)
+                    .param("start_date", startdate));
+
+            listDaily.forEach(item->{
+                DaytimeStock ds =new DaytimeStock(item);
+                stockdaylist.insertLast(ds);
+            });
+
         }
+        else {
 
-        List<DailyEntity> listDaily = TushareProService.daily(new Request<DailyEntity>() {}
-                .allFields()
-                .param("ts_code", code)
-                .param("end_date", enddate)
-                .param("start_date", startdate));
+            if (code.startsWith("6")) {
+                code = code + ".SH";
+            } else {
+                code = code + ".SZ";
+            }
 
-        listDaily.forEach(item->{
-            DaytimeStock ds =new DaytimeStock(item);
-            stockdaylist.insertLast(ds);
-        });
+            List<DailyEntity> listDaily = TushareProService.daily(new Request<DailyEntity>() {
+            }
+                    .allFields()
+                    .param("ts_code", code)
+                    .param("end_date", enddate)
+                    .param("start_date", startdate));
+            listDaily.forEach(item->{
+                DaytimeStock ds =new DaytimeStock(item);
+                stockdaylist.insertLast(ds);
+            });
+
+        }
 
         stockdaylist.updateToExcelWithLocal();
     }
@@ -75,22 +116,7 @@ public class StartTushareProSample {
 //            .param("ts_code", "150018.SZ"))
 //            .forEach(System.out::println);
 
-        StockReader reader = new StockReader("Shanghai");
-        reader.load();
-        reader.add("Shenzheng");
-        reader.add("zhongxiaoban");
-        reader.add("chuangyeban");
-        Set<String> codelist = reader.getCode();
-        codelist.forEach(item-> {
-            try {
-                System.out.println(item);
-                appendStock(item,"20200622","20200710");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-
+          downloadStockDaily("20200622","20200712");
 
 
 
